@@ -1,8 +1,19 @@
-// @lovable.dev/vite-tanstack-config already includes:
-//   tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (auto-detects Vercel on Vercel),
-//   componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  nitro: true,
+  plugins: [
+    tsconfigPaths(),
+    tailwindcss(),
+    TanStackRouterVite({ autoCodeSplitting: true }),
+    tanstackStart(),
+    react(),
+  ],
+  resolve: {
+    dedupe: ["react", "react-dom"],
+  },
 });
