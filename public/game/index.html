@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f3d2e">
+    <title>EcoCraft — O Jogo da Reciclagem</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-green: #34d399;
+            --primary-green-deep: #10b981;
+            --primary-green-soft: #a7f3d0;
+            --accent-gold: #fbbf24;
+            --bg-base: #0f3d2e;
+            --text-primary: #f0fdf4;
+            --glass-bg: rgba(15, 61, 46, 0.7);
+            --card-border: rgba(167, 243, 208, 0.18);
+            --neon-glow: 0 0 20px rgba(52, 211, 153, 0.35);
+        }
+        html, body { height: 100%; }
+        body {
+            background-color: var(--bg-base);
+            background-image:
+                radial-gradient(circle at 18% 12%, rgba(167, 243, 208, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 85% 90%, rgba(16, 185, 129, 0.22) 0%, transparent 50%),
+                linear-gradient(160deg, #14543f 0%, #0f3d2e 55%, #0b2f24 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Welcome Screen ===== */
+        .welcome {
+            position: fixed; inset: 0; z-index: 6000;
+            display: flex; align-items: center; justify-content: center;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(52,211,153,0.25), transparent 55%),
+                radial-gradient(circle at 80% 80%, rgba(16,185,129,0.25), transparent 55%),
+                linear-gradient(160deg, #0f3d2e, #0b2f24);
+            padding: 24px;
+            animation: fadeIn .4s ease-out;
+        }
+        .welcome-card {
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            background: rgba(15,61,46,0.85);
+            border: 1px solid rgba(167,243,208,0.25);
+            border-radius: 28px;
+            padding: 36px 28px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+        }
+        .welcome-card img { width: 220px; max-width: 80%; margin-bottom: 18px; filter: drop-shadow(0 0 20px rgba(167,243,208,0.45)); }
+        .welcome-card h1 { font-size: 22px; margin-bottom: 10px; color: var(--text-primary); letter-spacing: .5px; }
+        .welcome-card p { color: var(--primary-green-soft); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+        .welcome-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 16px 32px;
+            border: none; border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary-green), var(--primary-green-deep));
+            color: #053b29; font-weight: 800; cursor: pointer; font-size: 15px;
+            letter-spacing: 1px; text-transform: uppercase;
+            box-shadow: 0 12px 30px rgba(16,185,129,0.45);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .welcome-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(16,185,129,0.55); }
+
+        /* Header */
+        .game-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 18px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid rgba(167, 243, 208, 0.18);
+            flex-shrink: 0;
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            gap: 10px;
+        }
+        .header-logo { flex: 1; display: flex; justify-content: center; min-width: 0; }
+        .header-logo img { height: 44px; width: auto; max-width: 100%; filter: brightness(1.15) drop-shadow(0 0 12px rgba(167, 243, 208, 0.6)); }
+        .discovery-counter {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            padding: 8px 12px; border-radius: 10px;
+            font-size: 14px; white-space: nowrap;
+        }
+        .counter-value { color: var(--primary-green-soft); font-weight: 700; }
+
+        /* Music toggle */
+        .music-toggle, .settings-toggle {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(167,243,208,0.3);
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 8px 10px; font-size: 14px;
+            cursor: pointer;
+            min-width: 40px; min-height: 40px;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .music-toggle:hover, .settings-toggle:hover { background: rgba(167,243,208,0.18); }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+
+        /* Settings panel */
+        .settings-panel {
+            position: fixed; top: 70px; right: 16px; z-index: 60;
+            background: rgba(10, 30, 22, 0.96);
+            border: 1px solid rgba(167,243,208,0.25);
+            border-radius: 14px;
+            padding: 16px 18px;
+            min-width: 260px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+            backdrop-filter: blur(12px);
+            display: none;
+        }
+        .settings-panel.active { display: block; }
+        .settings-panel h3 {
+            font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-secondary); margin: 0 0 12px; font-weight: 700;
+        }
+        .settings-row { margin-bottom: 14px; }
+        .settings-row:last-child { margin-bottom: 0; }
+        .settings-row label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; color: var(--text-primary); margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .settings-row label span.val { color: #a7f3d0; font-variant-numeric: tabular-nums; }
+        .settings-row input[type="range"] {
+            width: 100%; accent-color: #34d399; cursor: pointer;
+        }
+
+        /* Game Canvas */
+        .game-canvas {
+            position: relative;
+            background:
+                radial-gradient(circle at 30% 25%, rgba(167, 243, 208, 0.10) 0%, transparent 55%),
+                radial-gradient(circle at 75% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 55%),
+                linear-gradient(160deg, #1d6b51 0%, #14543f 55%, #0f3d2e 100%);
+            overflow: hidden;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.35);
+            border-radius: 14px;
+            margin: 10px;
+            border: 1px solid rgba(167, 243, 208, 0.18);
+            touch-action: none;
+            height: 55vh;
+            min-height: 340px;
+            max-height: 560px;
+        }
+        .game-canvas::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("/__l5e/assets-v1/35563b77-2808-4563-b49a-04a2ad6d793e/ecocraft-logo.png");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: min(55%, 380px) auto;
+            opacity: 0.08;
+            filter: grayscale(20%) brightness(1.6) contrast(0.9);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .game-canvas > * { position: relative; z-index: 1; }
+
+        .item-sprite {
+            position: absolute; cursor: grab; user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1.5px solid rgba(167, 243, 208, 0.35);
+            border-radius: 22px;
+            width: 90px; height: 90px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+            touch-action: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .item-sprite:hover { background: rgba(167, 243, 208, 0.18); border-color: var(--primary-green); transform: scale(1.05) translateY(-4px); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), var(--neon-glow); }
+        .item-sprite.dragging { cursor: grabbing; transform: scale(1.12); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(52, 211, 153, 0.6); border-color: var(--primary-green); z-index: 1000; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: rgba(248, 113, 113, 0.95); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10; opacity: 0; transform: scale(0.5); transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .item-sprite:hover .delete-btn, .item-sprite.dragging .delete-btn { opacity: 1; transform: scale(1); }
+        .item-sprite img { width: 62px; height: 62px; object-fit: contain; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45)); transition: transform 0.25s ease; }
+        .item-sprite:hover img { transform: scale(1.15) translateY(-4px); }
+        .item-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; color: var(--primary-green-soft); white-space: nowrap; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6); max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Toast */
+        .toast { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); background: rgba(15, 61, 46, 0.92); border: 1px solid var(--card-border); padding: 14px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; z-index: 2000; animation: toastIn 0.3s ease-out; pointer-events: none; max-width: 92vw; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.35); backdrop-filter: blur(10px); }
+        .toast.success { color: #ecfdf5; border-color: rgba(52, 211, 153, 0.6); background: rgba(16, 185, 129, 0.85); }
+        .toast.error { color: #fff; border-color: rgba(248, 113, 113, 0.6); background: rgba(220, 38, 38, 0.85); }
+        .toast.info { color: #ecfdf5; border-color: rgba(167, 243, 208, 0.5); background: rgba(20, 84, 63, 0.92); }
+
+        .floating-text { position: fixed; font-size: 18px; font-weight: 700; color: var(--accent-gold); pointer-events: none; animation: floatUp 2s ease-out forwards; z-index: 1500; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+
+        /* Discovered */
+        .discovered-panel { flex-shrink: 0; background: rgba(11, 47, 36, 0.65); border-top: 1px solid rgba(167, 243, 208, 0.15); padding: 12px 16px 10px; backdrop-filter: blur(20px); box-shadow: 0 -8px 24px rgba(0,0,0,0.2); }
+        .discovered-title { font-size: 11px; font-weight: 700; color: var(--primary-green-soft); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .discovered-items { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+        .discovered-items::-webkit-scrollbar { height: 6px; }
+        .discovered-items::-webkit-scrollbar-thumb { background: rgba(167, 243, 208, 0.35); border-radius: 3px; }
+        .discovered-item { flex-shrink: 0; width: 56px; height: 56px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(167, 243, 208, 0.25); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); animation: slideUpItem 0.4s ease-out; }
+        .discovered-item:hover, .discovered-item:active { transform: scale(1.08); background: rgba(167, 243, 208, 0.18); border-color: var(--primary-green); }
+        .discovered-item img { width: 40px; height: 40px; object-fit: contain; }
+
+        /* Controls */
+        .controls { display: flex; gap: 10px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: rgba(11, 47, 36, 0.92); border-top: 1px solid rgba(167, 243, 208, 0.15); flex-shrink: 0; }
+        .btn { flex: 1; padding: 14px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(167, 243, 208, 0.2); color: var(--text-primary); border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; }
+        .btn:hover { background: rgba(167, 243, 208, 0.12); border-color: rgba(167, 243, 208, 0.5); transform: translateY(-2px); }
+        .btn.reset { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.35); color: #fecaca; }
+        .btn.hint { background: linear-gradient(135deg, rgba(52, 211, 153, 0.25), rgba(16, 185, 129, 0.35)); border-color: rgba(52, 211, 153, 0.55); color: #ecfdf5; }
+        .header-back { background: rgba(255,255,255,0.08); border: 1px solid rgba(167, 243, 208, 0.3); color: var(--text-primary); border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; min-height: 40px; }
+        .header-back:hover { background: rgba(167, 243, 208, 0.18); }
+
+        @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes slideUpItem { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes successFlash { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.85); transform: scale(0.85); } 50% { box-shadow: 0 0 24px 14px rgba(52, 211, 153, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .item-sprite.shake { animation: shake 0.3s ease-in-out; }
+        .item-sprite.success-flash { animation: successFlash 0.5s ease-out; }
+
+        .craft-fx { position: fixed; z-index: 1800; pointer-events: none; display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: rgba(15, 61, 46, 0.92); border: 1px solid rgba(52, 211, 153, 0.5); border-radius: 22px; transform: translate(-50%, -50%); animation: craftFx 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; box-shadow: 0 0 40px rgba(52, 211, 153, 0.4); backdrop-filter: blur(10px); max-width: 90vw; }
+        .craft-fx img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(167,243,208,0.4)); }
+        .craft-fx .arrow { color: var(--primary-green-soft); font-weight: 800; font-size: 20px; }
+        @keyframes craftFx { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 80% { opacity: 1; transform: translate(-50%, -52%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(0.9); } }
+        .rarity-badge { position: absolute; top: -6px; right: -6px; font-size: 9px; font-weight: 800; padding: 3px 6px; border-radius: 8px; color: #053b29; line-height: 1; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+        .rarity-common { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .rarity-uncommon { background: linear-gradient(135deg, #6ee7b7, #10b981); color: #053b29; }
+        .rarity-rare { background: linear-gradient(135deg, #34d399, #047857); color: #ecfdf5; }
+        .rarity-epic { background: linear-gradient(135deg, #fbbf24, #d97706); color: #422006; box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
+
+        @media (max-width: 640px) {
+            .game-header { padding: 10px 12px; gap: 8px; }
+            .header-logo img { height: 36px; }
+            .discovery-counter { font-size: 12px; padding: 6px 10px; }
+            .header-back { padding: 8px 10px; font-size: 10px; }
+            .game-canvas { margin: 6px; border-radius: 10px; }
+            .item-sprite { width: 76px; height: 76px; border-radius: 18px; }
+            .item-sprite img { width: 54px; height: 54px; }
+            .discovered-item { width: 52px; height: 52px; }
+            .discovered-item img { width: 38px; height: 38px; }
+            .controls { gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+            .btn { padding: 12px 8px; font-size: 11px; letter-spacing: 0.5px; }
+        }
+        @media (min-width: 1024px) {
+            .game-header { padding: 16px 28px; }
+            .header-logo img { height: 56px; }
+            .controls { padding: 14px 24px; gap: 14px; }
+            .btn { font-size: 13px; padding: 14px 20px; }
+            .item-sprite { width: 100px; height: 100px; }
+            .item-sprite img { width: 72px; height: 72px; }
+            .game-canvas { height: 50vh; min-height: 380px; max-height: 540px; max-width: 1100px; margin: 12px auto; width: calc(100% - 24px); }
+        }
+
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 5000; animation: fadeIn 0.3s ease-out; }
+        .modal-card { background: linear-gradient(160deg, #14543f, #0f3d2e); border: 1px solid rgba(167, 243, 208, 0.25); border-radius: 22px; padding: 28px 26px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-overlay.active { display: flex; }
+        .modal-overlay.active .modal-card { transform: scale(1); }
+        .modal-card h2 { margin-bottom: 12px; color: var(--accent-gold); font-size: 20px; }
+        .modal-card p { color: var(--primary-green-soft); margin-bottom: 22px; line-height: 1.5; font-size: 14px; }
+        .modal-actions { display: flex; gap: 12px; }
+        .btn-modal { flex: 1; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; min-height: 48px; }
+        .btn-confirm { background: #ef4444; color: #fff; }
+        .btn-cancel { background: rgba(255,255,255,0.12); color: #ecfdf5; }
+
+        /* ===== Premium Level Modal ===== */
+        .level-overlay { background: radial-gradient(circle at 50% 40%, rgba(16,185,129,0.25), rgba(0,0,0,0.88) 65%); }
+        .level-card {
+            position: relative;
+            max-width: 440px; width: 92%;
+            padding: 38px 32px 30px;
+            border-radius: 28px;
+            text-align: center;
+            background:
+                radial-gradient(circle at 20% 0%, rgba(251,191,36,0.18), transparent 55%),
+                radial-gradient(circle at 90% 100%, rgba(52,211,153,0.22), transparent 60%),
+                linear-gradient(160deg, #0f3d2e 0%, #0b2f24 60%, #082018 100%);
+            border: 1px solid rgba(251,191,36,0.25);
+            box-shadow:
+                0 30px 80px rgba(0,0,0,0.65),
+                0 0 60px rgba(16,185,129,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+            transform: scale(0.92);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+        .modal-overlay.active .level-card { transform: scale(1); }
+        .level-card::before {
+            content: ""; position: absolute; inset: -2px; border-radius: 30px; padding: 2px;
+            background: conic-gradient(from 0deg, rgba(251,191,36,0.0), rgba(251,191,36,0.85), rgba(52,211,153,0.85), rgba(251,191,36,0.0));
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            animation: spinBorder 6s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes spinBorder { to { transform: rotate(360deg); } }
+        .level-trophy {
+            width: 84px; height: 84px; margin: 0 auto 14px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 44px;
+            background: radial-gradient(circle at 35% 30%, #fde68a, #f59e0b 60%, #b45309);
+            box-shadow: 0 12px 30px rgba(245,158,11,0.45), inset 0 2px 6px rgba(255,255,255,0.5), 0 0 50px rgba(251,191,36,0.45);
+            animation: trophyPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes trophyPulse { 0%,100% { transform: scale(1); box-shadow: 0 12px 30px rgba(245,158,11,0.45), inset 0 2px 6px rgba(255,255,255,0.5), 0 0 50px rgba(251,191,36,0.45);} 50% { transform: scale(1.06); box-shadow: 0 14px 36px rgba(245,158,11,0.55), inset 0 2px 6px rgba(255,255,255,0.55), 0 0 70px rgba(251,191,36,0.7);} }
+        .level-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #fcd34d; font-weight: 800; margin-bottom: 8px; }
+        .level-title { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; color: #f8fafc; margin-bottom: 10px; background: linear-gradient(135deg, #fef3c7, #fbbf24); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .level-sub { color: var(--primary-green-soft); font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+        .level-stats { display: flex; gap: 10px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
+        .level-stat { padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(167,243,208,0.18); min-width: 110px; }
+        .level-stat .k { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--primary-green-soft); opacity: 0.85; }
+        .level-stat .v { font-size: 20px; font-weight: 800; color: #ecfdf5; margin-top: 2px; }
+        .level-stat.gold { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.10); }
+        .level-stat.gold .v { color: #fde68a; }
+        .level-actions { display: flex; gap: 12px; }
+        .btn-premium {
+            flex: 1; padding: 15px 14px; border-radius: 14px; font-weight: 800; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            min-height: 50px;
+        }
+        .btn-premium.ghost { background: rgba(255,255,255,0.06); color: #ecfdf5; border-color: rgba(167,243,208,0.25); }
+        .btn-premium.ghost:hover { background: rgba(167,243,208,0.14); transform: translateY(-2px); }
+        .btn-premium.gold {
+            background: linear-gradient(135deg, #fde68a, #f59e0b 55%, #d97706);
+            color: #422006;
+            box-shadow: 0 12px 30px rgba(245,158,11,0.45), inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+        .btn-premium.gold:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(245,158,11,0.55), inset 0 1px 0 rgba(255,255,255,0.6); }
+
+        /* Confetti dots for the final win */
+        .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .confetti span { position: absolute; width: 8px; height: 8px; border-radius: 2px; opacity: 0; animation: confettiFall 2.6s ease-in forwards; }
+        @keyframes confettiFall { 0% { opacity: 0; transform: translateY(-30px) rotate(0deg); } 10% { opacity: 1; } 100% { opacity: 0; transform: translateY(420px) rotate(540deg); } }
+
+        /* ===== Inline Tutorial under the game (collapsible) ===== */
+        .tutorial-section {
+            padding: 0 14px 24px;
+            background: linear-gradient(180deg, rgba(8,32,24,0.0) 0%, rgba(8,32,24,0.85) 18%, #061a13 100%);
+            border-top: 1px solid rgba(167,243,208,0.12);
+        }
+        .tutorial-wrap { max-width: 1080px; margin: 0 auto; }
+        .tutorial-toggle {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px;
+            margin: 14px 0 0;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, rgba(20,84,63,0.85), rgba(11,47,36,0.85));
+            border: 1px solid rgba(167,243,208,0.22);
+            border-radius: 14px;
+            color: #ecfdf5;
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: background .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .tutorial-toggle:hover { background: linear-gradient(135deg, rgba(20,84,63,0.95), rgba(16,185,129,0.25)); border-color: rgba(52,211,153,0.5); }
+        .tutorial-toggle .tt-left { display: flex; align-items: center; gap: 10px; }
+        .tutorial-toggle .tt-icon { width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #053b29; font-size: 14px; box-shadow: 0 4px 10px rgba(245,158,11,0.35); }
+        .tutorial-toggle .tt-chevron { transition: transform .3s ease; font-size: 18px; opacity: .85; }
+        .tutorial-toggle[aria-expanded="true"] .tt-chevron { transform: rotate(180deg); }
+        .tutorial-body {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height .45s ease, opacity .35s ease, margin-top .3s ease;
+        }
+        .tutorial-body.open { max-height: 2400px; opacity: 1; margin-top: 18px; padding-bottom: 12px; }
+        .tutorial-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #fcd34d; font-weight: 800; margin-bottom: 10px; text-align: center; }
+        .tutorial-title { font-size: 22px; font-weight: 900; color: #ecfdf5; text-align: center; margin-bottom: 22px; letter-spacing: 0.3px; }
+        .tutorial-title em { font-style: normal; background: linear-gradient(135deg, #34d399, #10b981); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .tutorial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+        .tut-card {
+            position: relative;
+            background: linear-gradient(160deg, rgba(20,84,63,0.65), rgba(11,47,36,0.7));
+            border: 1px solid rgba(167,243,208,0.18);
+            border-radius: 18px;
+            padding: 18px 16px 16px;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px);
+        }
+        .tut-step { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; font-weight: 900; font-size: 12px; color: #053b29; background: linear-gradient(135deg, #fde68a, #f59e0b); margin-bottom: 10px; box-shadow: 0 6px 14px rgba(245,158,11,0.35); }
+        .tut-card h3 { font-size: 15px; font-weight: 800; color: #ecfdf5; margin-bottom: 6px; letter-spacing: 0.2px; }
+        .tut-card p { font-size: 13px; line-height: 1.55; color: var(--primary-green-soft); }
+        .tut-card .icon { font-size: 20px; margin-right: 6px; }
+        .tutorial-tip { margin-top: 18px; text-align: center; font-size: 12px; color: var(--primary-green-soft); opacity: 0.85; letter-spacing: 0.4px; }
+        @media (max-width: 640px) {
+            .tutorial-title { font-size: 18px; margin-bottom: 16px; }
+            .tutorial-toggle { padding: 12px 14px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div class="welcome" id="welcomeScreen">
+        <div class="welcome-card">
+            <img src="assets/logo-horizontal.png" alt="EcoCraft">
+            <h1>Bem-vindo ao EcoCraft</h1>
+            <p>Combine materiais recicláveis arrastando um sobre o outro e descubra novos objetos sustentáveis. Sua jornada ecológica começa agora.</p>
+            <button class="welcome-btn" id="welcomeContinue">Continuar →</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="game-header">
+        <button id="backBtn" class="header-back" aria-label="Voltar ao menu">Menu</button>
+        <div class="header-logo"><img src="assets/logo-horizontal.png" alt="EcoCraft"></div>
+        <div class="header-actions">
+            <button id="musicToggle" class="music-toggle" aria-label="Música" title="Música">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </button>
+            <button id="settingsToggle" class="settings-toggle" aria-label="Configurações" title="Configurações">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
+        <div class="discovery-counter">
+            <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.75;">Descobertas</span>
+            <span class="counter-value" id="counter">0/10</span>
+        </div>
+    </div>
+
+    <div class="game-canvas" id="gameCanvas"></div>
+
+    <div class="discovered-panel">
+        <div class="discovered-title">Itens Descobertos</div>
+        <div class="discovered-items" id="discoveredItems"></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn reset" id="resetBtn"><span style="font-size:16px;">↺</span> Reiniciar</button>
+        <button class="btn hint" id="hintBtn"><span style="font-size:16px;">💡</span> Dica</button>
+    </div>
+
+    <!-- ===== Tutorial below the game (collapsible) ===== -->
+    <section class="tutorial-section" aria-label="Tutorial">
+        <div class="tutorial-wrap">
+            <button class="tutorial-toggle" id="tutorialToggle" aria-expanded="false" aria-controls="tutorialBody">
+                <span class="tt-left"><span class="tt-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span><span>Tutorial Rápido</span></span>
+                <span class="tt-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="tutorial-body" id="tutorialBody" role="region" aria-label="Conteúdo do tutorial">
+                <div class="tutorial-eyebrow">Tutorial Rápido</div>
+                <h2 class="tutorial-title">Como <em>jogar EcoCraft</em></h2>
+                <div class="tutorial-grid">
+                    <div class="tut-card">
+                        <span class="tut-step">1</span>
+                        <h3><span class="icon">🎯</span>Objetivo</h3>
+                        <p>Realize combinações de materiais recicláveis até completar a meta de descobertas do nível atual.</p>
+                    </div>
+                    <div class="tut-card">
+                        <span class="tut-step">2</span>
+                        <h3><span class="icon">🖱️</span>Arraste e combine</h3>
+                        <p>Segure um item e arraste sobre outro. Se a receita existir, eles se transformam em um novo material.</p>
+                    </div>
+                    <div class="tut-card">
+                        <span class="tut-step">3</span>
+                        <h3><span class="icon">🧪</span>Respeite o tier</h3>
+                        <p>Primário + Primário = Intermediário. Intermediário + Intermediário = Avançado. Tiers diferentes não combinam.</p>
+                    </div>
+                    <div class="tut-card">
+                        <span class="tut-step">4</span>
+                        <h3><span class="icon">📈</span>Suba de nível</h3>
+                        <p>A cada nível a meta cresce em +2 descobertas e a zona de combinação encolhe. Mais desafio, mais glória.</p>
+                    </div>
+                    <div class="tut-card">
+                        <span class="tut-step">5</span>
+                        <h3><span class="icon">💡</span>Use as dicas</h3>
+                        <p>Tocou a parede? Aperte <strong>Dica</strong> para receber uma sugestão de combinação possível.</p>
+                    </div>
+                    <div class="tut-card">
+                        <span class="tut-step">6</span>
+                        <h3><span class="icon">🏆</span>Zere o jogo</h3>
+                        <p>Vença todos os níveis para zerar o EcoCraft. Ao zerar, tudo é reiniciado e você começa um novo ciclo.</p>
+                    </div>
+                </div>
+                <p class="tutorial-tip">Dica: clique nos itens já descobertos no rodapé para spawnar uma cópia no canvas.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Background music playlist -->
+    <audio id="bgMusic" preload="auto" loop></audio>
+    <!-- Level-up celebration sound -->
+    <audio id="winSfx" preload="auto" src="/__l5e/assets-v1/93b46b42-fbdf-41d8-a1ba-dd3fb449629b/level-up-celebration.mp3"></audio>
+
+    <!-- Settings panel -->
+    <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Configurações de áudio">
+        <h3>⚙️ Configurações</h3>
+        <div class="settings-row">
+            <label for="musicVol">Música <span class="val" id="musicVolVal">35%</span></label>
+            <input type="range" id="musicVol" min="0" max="100" value="35">
+        </div>
+        <div class="settings-row">
+            <label for="sfxVol">Efeitos <span class="val" id="sfxVolVal">90%</span></label>
+            <input type="range" id="sfxVol" min="0" max="100" value="90">
+        </div>
+    </div>
+
+    <script>
+        // ============ AUDIO SETTINGS (persisted) ============
+        const AUDIO_KEY = 'ecocraft.audio.v1';
+        const audioPrefs = (() => {
+            try { return JSON.parse(localStorage.getItem(AUDIO_KEY)) || {}; } catch(_) { return {}; }
+        })();
+        let musicVolume = typeof audioPrefs.music === 'number' ? audioPrefs.music : 0.35;
+        let sfxVolume   = typeof audioPrefs.sfx   === 'number' ? audioPrefs.sfx   : 0.9;
+        let musicEnabled = audioPrefs.musicOn !== false;
+        function persistAudio() {
+            try { localStorage.setItem(AUDIO_KEY, JSON.stringify({ music: musicVolume, sfx: sfxVolume, musicOn: musicEnabled })); } catch(_){}
+        }
+
+        // ============ MUSIC ============
+        const BG_MUSIC_URL = "/__l5e/assets-v1/33ba3a0c-8657-4909-bd8a-0887a6822d76/bg-music-bossa.mp3";
+        const bgMusic = document.getElementById('bgMusic');
+        const winSfxEl = document.getElementById('winSfx');
+        bgMusic.volume = musicVolume;
+        bgMusic.loop = true;
+        function playTrack() {
+            if (!bgMusic.src) bgMusic.src = BG_MUSIC_URL;
+            bgMusic.volume = musicVolume;
+            bgMusic.play().catch(() => {});
+        }
+        const ICON_MUSIC = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+        const ICON_MUTED = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>';
+        const musicToggleBtn = document.getElementById('musicToggle');
+        musicToggleBtn.innerHTML = musicEnabled ? ICON_MUSIC : ICON_MUTED;
+        musicToggleBtn.addEventListener('click', () => {
+            musicEnabled = !musicEnabled;
+            if (musicEnabled) { playTrack(); musicToggleBtn.innerHTML = ICON_MUSIC; }
+            else { bgMusic.pause(); musicToggleBtn.innerHTML = ICON_MUTED; }
+            persistAudio();
+        });
+
+        // ============ SETTINGS PANEL ============
+        const settingsPanel = document.getElementById('settingsPanel');
+        document.getElementById('settingsToggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target.id !== 'settingsToggle') {
+                settingsPanel.classList.remove('active');
+            }
+        });
+        const musicVol = document.getElementById('musicVol');
+        const sfxVol = document.getElementById('sfxVol');
+        const musicVolVal = document.getElementById('musicVolVal');
+        const sfxVolVal = document.getElementById('sfxVolVal');
+        musicVol.value = Math.round(musicVolume * 100);
+        sfxVol.value   = Math.round(sfxVolume * 100);
+        musicVolVal.textContent = musicVol.value + '%';
+        sfxVolVal.textContent   = sfxVol.value   + '%';
+        musicVol.addEventListener('input', () => {
+            musicVolume = Number(musicVol.value) / 100;
+            bgMusic.volume = musicVolume;
+            musicVolVal.textContent = musicVol.value + '%';
+            if (musicVolume > 0 && musicEnabled && bgMusic.paused) playTrack();
+            persistAudio();
+        });
+        sfxVol.addEventListener('input', () => {
+            sfxVolume = Number(sfxVol.value) / 100;
+            try { winSfxEl.volume = sfxVolume; } catch(_){}
+            sfxVolVal.textContent = sfxVol.value + '%';
+            // Audio feedback so user can hear the new SFX level
+            sfx(720, 0.08, 'square', 0.12);
+            persistAudio();
+        });
+
+        // ============ SFX (Web Audio) ============
+        let audioCtx;
+        function sfx(freq, dur, type='sine', vol=0.15) {
+            if (sfxVolume <= 0) return;
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = type; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol * sfxVolume, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+                o.connect(g).connect(audioCtx.destination);
+                o.start(); o.stop(audioCtx.currentTime + dur);
+            } catch(_){}
+        }
+        const sfxClick = () => sfx(720, 0.08, 'square', 0.12);
+        const sfxSuccess = () => { sfx(660, 0.12, 'triangle', 0.2); setTimeout(()=>sfx(990, 0.18, 'triangle', 0.2), 100); };
+        const sfxFail = () => sfx(180, 0.15, 'sawtooth', 0.12);
+
+        // Win celebration playback (only once per level win)
+        winSfxEl.volume = sfxVolume;
+        let levelWinPlayed = false;
+        function playWinSfx() {
+            if (levelWinPlayed) return;
+            levelWinPlayed = true;
+            try { winSfxEl.pause(); winSfxEl.currentTime = 0; winSfxEl.volume = sfxVolume; winSfxEl.play().catch(()=>{}); } catch(_){}
+        }
+        function stopWinSfx() {
+            try { winSfxEl.pause(); winSfxEl.currentTime = 0; } catch(_){}
+        }
+
+
+        // ============ GAME DATA (10 itens) ============
+        const ITEMS_DATA = {
+            'papel':            { name: 'Papel',            image: 'objetos/objetos-primarios/papel.png',            type: 'primary',      rarity: 'common',   value: 1 },
+            'papelao':          { name: 'Papelão',          image: 'objetos/objetos-primarios/papelao.png',          type: 'primary',      rarity: 'common',   value: 1 },
+            'garrafa-plastico': { name: 'Garrafa Plástica', image: 'objetos/objetos-primarios/garrafa-plastico.png', type: 'primary',      rarity: 'common',   value: 1 },
+            'vidro':            { name: 'Vidro',            image: 'objetos/objetos-primarios/vidro.png',            type: 'primary',      rarity: 'common',   value: 1 },
+            'metal':            { name: 'Metal',            image: 'objetos/objetos-primarios/metal.png',            type: 'primary',      rarity: 'common',   value: 2 },
+            'madeira':          { name: 'Madeira',          image: 'objetos/objetos-primarios/madeira.png',          type: 'primary',      rarity: 'common',   value: 2 },
+
+            'papel-reciclado':    { name: 'Papel Reciclado',    image: 'objetos/objetos-combinacoes/papel-reciclado.png',    type: 'intermediate', rarity: 'uncommon', value: 5 },
+            'plastico-triturado': { name: 'Plástico Triturado', image: 'objetos/objetos-combinacoes/plastico-triturado.png', type: 'intermediate', rarity: 'uncommon', value: 5 },
+            'vidro-moido':        { name: 'Vidro Moído',        image: 'objetos/objetos-combinacoes/vidro-moido.png',        type: 'intermediate', rarity: 'rare',     value: 8 },
+
+            'brinquedo-ecologico':{ name: 'Brinquedo Ecológico',image: 'objetos/objetos-combinacoes/brinquedo-ecologico.png',type: 'advanced',     rarity: 'epic',     value: 25 }
+        };
+
+        const RECIPES = {
+            // primary + primary -> intermediate (várias rotas pra facilitar)
+            'papel-papel': 'papel-reciclado',
+            'papel-papelao': 'papel-reciclado',
+            'papelao-papelao': 'papel-reciclado',
+            'papelao-madeira': 'papel-reciclado',
+            'madeira-madeira': 'papel-reciclado',
+            'madeira-papel': 'papel-reciclado',
+
+            'garrafa-plastico-garrafa-plastico': 'plastico-triturado',
+            'garrafa-plastico-metal': 'plastico-triturado',
+            'metal-metal': 'plastico-triturado',
+
+            'vidro-vidro': 'vidro-moido',
+            'vidro-metal': 'vidro-moido',
+            'vidro-garrafa-plastico': 'vidro-moido',
+
+            // intermediate + intermediate -> advanced (qualquer dupla intermediária funciona)
+            'papel-reciclado-plastico-triturado': 'brinquedo-ecologico',
+            'papel-reciclado-vidro-moido': 'brinquedo-ecologico',
+            'plastico-triturado-vidro-moido': 'brinquedo-ecologico',
+            'papel-reciclado-papel-reciclado': 'brinquedo-ecologico',
+            'plastico-triturado-plastico-triturado': 'brinquedo-ecologico',
+            'vidro-moido-vidro-moido': 'brinquedo-ecologico'
+        };
+        const TOTAL_ITEMS = Object.keys(ITEMS_DATA).length;
+
+        function craft(a, b) {
+            const A = ITEMS_DATA[a], B = ITEMS_DATA[b];
+            if (!A || !B) return { ok:false, reason:'unknown' };
+            const valid = (A.type === 'primary' && B.type === 'primary') || (A.type === 'intermediate' && B.type === 'intermediate');
+            if (!valid) return { ok:false, reason:'tier-mismatch' };
+            const r = RECIPES[a+'-'+b] || RECIPES[b+'-'+a];
+            if (!r) return { ok:false, reason:'no-recipe' };
+            return { ok:true, resultId:r, result: ITEMS_DATA[r] };
+        }
+
+        // ============ STATE ============
+        let gameState = { activeItems: [], discoveredItems: new Set(), draggedItem: null, offsetX: 0, offsetY: 0 };
+        let currentLevel = 1;
+        let levelWon = false;
+        let combineThreshold = 220;
+        const MAX_LEVEL = 5; // metas: 10,12,14,16,18
+        const BASE_GOAL = 10;
+        let craftsThisLevel = 0;
+        function levelGoal(lvl) { return BASE_GOAL + (lvl - 1) * 2; }
+        const gameCanvas = document.getElementById('gameCanvas');
+        const discoveredItemsContainer = document.getElementById('discoveredItems');
+        const counterDisplay = document.getElementById('counter');
+        const resetBtn = document.getElementById('resetBtn');
+        const hintBtn = document.getElementById('hintBtn');
+
+        function initGame() {
+            gameState.activeItems = [];
+            gameState.discoveredItems.clear();
+            discoveredItemsContainer.innerHTML = '';
+            gameCanvas.innerHTML = '';
+            levelWon = false;
+            levelWinPlayed = false;
+            craftsThisLevel = 0;
+            stopWinSfx();
+            // Difficulty per level: combination threshold shrinks, extra clutter primaries are spawned.
+            combineThreshold = Math.max(70, 220 - (currentLevel - 1) * 35);
+            const base = ['papel','papelao','garrafa-plastico','vidro','metal','madeira'];
+            const extraClutter = Math.max(0, (currentLevel - 1) * 2);
+            const initialItems = base.slice();
+            for (let k = 0; k < extraClutter; k++) initialItems.push(base[k % base.length]);
+            const cw = gameCanvas.offsetWidth;
+            const ch = gameCanvas.offsetHeight;
+            const isNarrow = cw < 700;
+            const spriteSize = isNarrow ? 76 : 100;
+            const cols = isNarrow ? 2 : Math.min(4, 3 + Math.floor((currentLevel - 1) / 2));
+            const rows = Math.ceil(initialItems.length / cols);
+            const gapX = Math.max(12, (cw - cols * spriteSize) / (cols + 1));
+            const gapY = Math.max(20, Math.min(40, (ch - rows * spriteSize) / (rows + 1)));
+            initialItems.forEach((id, i) => {
+                const col = i % cols, row = Math.floor(i / cols);
+                const x = gapX + col * (spriteSize + gapX);
+                const y = gapY + row * (spriteSize + gapY);
+                createSprite(id, x, y);
+                gameState.discoveredItems.add(id);
+            });
+            updateDiscoveredPanel();
+            updateCounter();
+        }
+
+        function createSprite(itemId, x, y) {
+            const itemData = ITEMS_DATA[itemId]; if (!itemData) return;
+            const sprite = document.createElement('div');
+            sprite.className = 'item-sprite';
+            sprite.dataset.itemId = itemId;
+            sprite.style.left = x + 'px'; sprite.style.top = y + 'px';
+            const img = document.createElement('img'); img.src = itemData.image; img.alt = itemData.name;
+            sprite.appendChild(img);
+            const label = document.createElement('span'); label.className = 'item-label'; label.textContent = itemData.name; sprite.appendChild(label);
+            const deleteBtn = document.createElement('div'); deleteBtn.className = 'delete-btn'; deleteBtn.innerHTML = '×';
+            deleteBtn.addEventListener('mousedown', e => { e.stopPropagation(); removeItem(sprite); });
+            deleteBtn.addEventListener('touchstart', e => { e.stopPropagation(); removeItem(sprite); });
+            sprite.appendChild(deleteBtn);
+            if (itemData.rarity) {
+                const badge = document.createElement('span');
+                badge.className = 'rarity-badge rarity-' + itemData.rarity;
+                badge.textContent = '+' + itemData.value;
+                sprite.appendChild(badge);
+            }
+            gameCanvas.appendChild(sprite);
+            gameState.activeItems.push({ element: sprite, itemId, x, y });
+            setupDrag(sprite);
+        }
+
+        function setupDrag(element) {
+            function onMouseDown(e) { if (e.button !== 0) return; startDrag(e.clientX, e.clientY, e); }
+            function onTouchStart(e) { if (e.touches.length !== 1) return; startDrag(e.touches[0].clientX, e.touches[0].clientY, e); }
+            function startDrag(clientX, clientY, e) {
+                e.preventDefault();
+                gameState.draggedItem = element;
+                const rect = element.getBoundingClientRect();
+                gameState.offsetX = clientX - rect.left;
+                gameState.offsetY = clientY - rect.top;
+                element.classList.add('dragging');
+                let curX = clientX, curY = clientY;
+                function onMouseMove(e) { curX = e.clientX; curY = e.clientY; update(curX, curY); }
+                function onTouchMove(e) { if (e.touches.length !== 1) return; curX = e.touches[0].clientX; curY = e.touches[0].clientY; update(curX, curY); }
+                function update(cx, cy) {
+                    const cr = gameCanvas.getBoundingClientRect();
+                    let nx = cx - cr.left - gameState.offsetX;
+                    let ny = cy - cr.top - gameState.offsetY;
+                    nx = Math.max(0, Math.min(nx, cr.width - element.offsetWidth));
+                    ny = Math.max(0, Math.min(ny, cr.height - element.offsetHeight));
+                    element.style.left = nx + 'px'; element.style.top = ny + 'px';
+                }
+                function endDrag() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', endDrag);
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', endDrag);
+                    element.classList.remove('dragging');
+                    const fx = parseFloat(element.style.left), fy = parseFloat(element.style.top);
+                    checkNearbyItems(element, fx, fy);
+                    gameState.draggedItem = null;
+                }
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', endDrag);
+            }
+            element.addEventListener('mousedown', onMouseDown);
+            element.addEventListener('touchstart', onTouchStart, { passive: false });
+        }
+
+        function checkNearbyItems(draggedEl, x, y) {
+            const THRESHOLD = combineThreshold;
+            let closest = null, minDist = Infinity;
+            for (const it of gameState.activeItems) {
+                if (it.element === draggedEl) continue;
+                const ox = parseFloat(it.element.style.left), oy = parseFloat(it.element.style.top);
+                const d = Math.hypot(x - ox, y - oy);
+                if (d < THRESHOLD && d < minDist) { minDist = d; closest = it; }
+            }
+            if (closest) checkCombination(draggedEl, closest.element, draggedEl.dataset.itemId, closest.element.dataset.itemId);
+        }
+
+        function checkCombination(el1, el2, id1, id2) {
+            const res = craft(id1, id2);
+            if (res.ok) { playCraftFx(el1, el2, id1, id2, res.resultId); successCombination(el1, el2, res.resultId); }
+            else { failedCombination(el1, el2, res.reason); }
+        }
+
+        function successCombination(el1, el2, resultId) {
+            sfxSuccess();
+            craftsThisLevel += 1;
+            const i1 = gameState.activeItems.find(i => i.element === el1);
+            const i2 = gameState.activeItems.find(i => i.element === el2);
+            if (i1) gameState.activeItems.splice(gameState.activeItems.indexOf(i1), 1);
+            if (i2) gameState.activeItems.splice(gameState.activeItems.indexOf(i2), 1);
+            const x = (parseFloat(el1.style.left) + parseFloat(el2.style.left)) / 2;
+            const y = (parseFloat(el1.style.top) + parseFloat(el2.style.top)) / 2;
+            el1.remove(); el2.remove();
+            createSprite(resultId, x, y);
+            const newEl = gameState.activeItems[gameState.activeItems.length - 1].element;
+            newEl.classList.add('success-flash');
+            if (!gameState.discoveredItems.has(resultId)) {
+                gameState.discoveredItems.add(resultId);
+                showFloatingText('+Novo item!', x + 30, y);
+                showToast(ITEMS_DATA[resultId].name + ' descoberto!', 'success');
+                updateDiscoveredPanel();
+            }
+            updateCounter();
+            persistDiscoveries();
+            notifyDiscovery(resultId);
+            if (craftsThisLevel >= levelGoal(currentLevel) && !levelWon) {
+                levelWon = true;
+                setTimeout(triggerLevelWin, 500);
+            }
+        }
+
+        function failedCombination(el1, el2, reason) {
+            sfxFail();
+            el1.classList.add('shake'); el2.classList.add('shake');
+            setTimeout(() => { el1.classList.remove('shake'); el2.classList.remove('shake'); }, 300);
+            const msg = reason === 'tier-mismatch' ? 'Combine materiais do mesmo nível.' : 'Essa combinação ainda não existe. Tente outra!';
+            showToast(msg, 'error');
+        }
+
+        function playCraftFx(el1, el2, idA, idB, resultId) {
+            const a = ITEMS_DATA[idA], b = ITEMS_DATA[idB], r = ITEMS_DATA[resultId];
+            const r1 = el1.getBoundingClientRect(), r2 = el2.getBoundingClientRect();
+            const cx = (r1.left + r1.right + r2.left + r2.right) / 4;
+            const cy = (r1.top + r1.bottom + r2.top + r2.bottom) / 4;
+            const fx = document.createElement('div');
+            fx.className = 'craft-fx';
+            fx.style.left = cx + 'px'; fx.style.top = cy + 'px';
+            fx.innerHTML = `<img src="${a.image}"><span class="arrow">+</span><img src="${b.image}"><span class="arrow">→</span><img src="${r.image}">`;
+            document.body.appendChild(fx);
+            setTimeout(() => fx.remove(), 650);
+        }
+
+        function updateDiscoveredPanel() {
+            discoveredItemsContainer.innerHTML = '';
+            gameState.discoveredItems.forEach(id => {
+                const it = ITEMS_DATA[id]; if (!it) return;
+                const d = document.createElement('div'); d.className = 'discovered-item'; d.title = it.name;
+                const img = document.createElement('img'); img.src = it.image; img.alt = it.name;
+                d.appendChild(img);
+                d.addEventListener('click', () => {
+                    sfxClick();
+                    const size = 90;
+                    const rx = 40 + Math.random() * Math.max(0, gameCanvas.offsetWidth - size - 80);
+                    const ry = 40 + Math.random() * Math.max(0, gameCanvas.offsetHeight - size - 80);
+                    createSprite(id, rx, ry);
+                });
+                discoveredItemsContainer.appendChild(d);
+            });
+        }
+
+        function updateCounter() {
+            counterDisplay.textContent = 'Nv ' + currentLevel + ' · ' + craftsThisLevel + '/' + levelGoal(currentLevel);
+        }
+
+        function showToast(message, type='info') {
+            const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = message;
+            document.body.appendChild(t); setTimeout(() => t.remove(), 2000);
+        }
+        function showFloatingText(text, x, y) {
+            const f = document.createElement('div'); f.className = 'floating-text'; f.textContent = text;
+            f.style.left = x + 'px'; f.style.top = y + 'px';
+            document.body.appendChild(f); setTimeout(() => f.remove(), 2000);
+        }
+
+        // Reset modal
+        const resetModal = document.createElement('div');
+        resetModal.className = 'modal-overlay';
+        resetModal.innerHTML = `
+            <div class="modal-card">
+                <h2>Reiniciar Progresso?</h2>
+                <p>Isso apagará suas descobertas. Esta ação não pode ser desfeita.</p>
+                <div class="modal-actions">
+                    <button class="btn-modal btn-cancel" id="cancelReset">Cancelar</button>
+                    <button class="btn-modal btn-confirm" id="confirmReset">Reiniciar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(resetModal);
+        resetBtn.addEventListener('click', () => { sfxClick(); resetModal.classList.add('active'); });
+        document.getElementById('cancelReset').addEventListener('click', () => { sfxClick(); resetModal.classList.remove('active'); });
+        document.getElementById('confirmReset').addEventListener('click', () => {
+            sfxClick();
+            resetModal.classList.remove('active');
+            try { localStorage.removeItem('ecocraft_discovered'); localStorage.removeItem('ecocraft_eco_points'); localStorage.removeItem('ecocraft_best_session'); } catch(_){}
+            currentLevel = 1;
+            initGame();
+            showToast('Tudo reiniciado!', 'info');
+        });
+
+        // ============ LEVEL-UP MODAL ============
+        const levelModal = document.createElement('div');
+        levelModal.className = 'modal-overlay level-overlay';
+        levelModal.innerHTML = `
+            <div class="level-card">
+                <div class="confetti" id="levelConfetti" aria-hidden="true"></div>
+                <div class="level-trophy" aria-hidden="true">🏆</div>
+                <div class="level-eyebrow" id="levelEyebrow">Nível concluído</div>
+                <div class="level-title" id="levelModalTitle">Nível 1 concluído</div>
+                <p class="level-sub" id="levelModalText">Meta atingida! Pronto para um desafio maior?</p>
+                <div class="level-stats">
+                    <div class="level-stat">
+                        <div class="k">Combinações</div>
+                        <div class="v" id="statCrafts">0</div>
+                    </div>
+                    <div class="level-stat gold">
+                        <div class="k">Próxima meta</div>
+                        <div class="v" id="statNextGoal">12</div>
+                    </div>
+                </div>
+                <div class="level-actions">
+                    <button class="btn-premium gold" id="levelNext">Próximo nível →</button>
+                </div>
+            </div>`;
+        document.body.appendChild(levelModal);
+        const levelConfetti = levelModal.querySelector('#levelConfetti');
+        function spawnConfetti(n) {
+            if (!levelConfetti) return;
+            levelConfetti.innerHTML = '';
+            const colors = ['#fbbf24', '#34d399', '#10b981', '#fde68a', '#a7f3d0'];
+            for (let i = 0; i < n; i++) {
+                const s = document.createElement('span');
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = (-10 - Math.random() * 30) + 'px';
+                s.style.background = colors[i % colors.length];
+                s.style.animationDelay = (Math.random() * 0.6) + 's';
+                s.style.transform = 'rotate(' + (Math.random()*180) + 'deg)';
+                levelConfetti.appendChild(s);
+            }
+        }
+        function triggerLevelWin() {
+            const nextLvl = currentLevel + 1;
+            const isFinal = currentLevel >= MAX_LEVEL;
+            playWinSfx();
+
+            const eyebrow = document.getElementById('levelEyebrow');
+            const title = document.getElementById('levelModalTitle');
+            const text = document.getElementById('levelModalText');
+            const nextBtn = document.getElementById('levelNext');
+            document.getElementById('statCrafts').textContent = craftsThisLevel;
+            if (isFinal) {
+                eyebrow.textContent = 'Você zerou o EcoCraft';
+                title.textContent = '🌍 Jogo zerado!';
+                text.textContent = 'Você conquistou todos os ' + MAX_LEVEL + ' níveis e completou ' + craftsThisLevel + ' combinações. Vamos reiniciar do zero?';
+                document.getElementById('statNextGoal').textContent = '↺';
+                nextBtn.textContent = 'Reiniciar jogo ↺';
+            } else {
+                eyebrow.textContent = 'Nível concluído';
+                title.textContent = 'Nível ' + currentLevel + ' concluído';
+                text.textContent = 'Meta de ' + levelGoal(currentLevel) + ' combinações atingida! No próximo nível a meta sobe para ' + levelGoal(nextLvl) + ' e a zona de combinação encolhe.';
+                document.getElementById('statNextGoal').textContent = levelGoal(nextLvl);
+                nextBtn.textContent = 'Próximo nível →';
+            }
+            spawnConfetti(isFinal ? 60 : 28);
+            levelModal.classList.add('active');
+        }
+        document.getElementById('levelNext').addEventListener('click', () => {
+            sfxClick();
+            stopWinSfx();
+            levelModal.classList.remove('active');
+            const wasFinal = currentLevel >= MAX_LEVEL;
+            if (wasFinal) {
+                currentLevel = 1;
+                try {
+                    localStorage.removeItem('ecocraft_discovered');
+                    localStorage.removeItem('ecocraft_eco_points');
+                    localStorage.removeItem('ecocraft_best_session');
+                } catch(_){}
+                initGame();
+                showToast('🌱 Jogo reiniciado — boa sorte no novo ciclo!', 'success');
+            } else {
+                currentLevel += 1;
+                try { localStorage.removeItem('ecocraft_discovered'); localStorage.removeItem('ecocraft_eco_points'); } catch(_){}
+                initGame();
+                showToast('Nível ' + currentLevel + ' iniciado — boa sorte!', 'info');
+            }
+        });
+
+        hintBtn.addEventListener('click', () => {
+            sfxClick();
+            const hints = [
+                'Combine Papel + Papel para criar Papel Reciclado',
+                'Combine Metal + Metal para criar Plástico Triturado',
+                'Combine Vidro + Vidro para criar Vidro Moído',
+                'Combine 2 materiais intermediários para criar o Brinquedo Ecológico'
+            ];
+            showToast('💡 ' + hints[Math.floor(Math.random() * hints.length)], 'success');
+        });
+
+        function removeItem(element) {
+            const it = gameState.activeItems.find(i => i.element === element);
+            if (it) gameState.activeItems.splice(gameState.activeItems.indexOf(it), 1);
+            element.remove();
+        }
+
+        function persistDiscoveries() {
+            try {
+                const ids = Array.from(gameState.discoveredItems);
+                const ecoPoints = ids.reduce((s, id) => s + (ITEMS_DATA[id]?.value || 0), 0);
+                localStorage.setItem('ecocraft_discovered', JSON.stringify(ids));
+                localStorage.setItem('ecocraft_eco_points', String(ecoPoints));
+                const best = Number(localStorage.getItem('ecocraft_best_session') || '0');
+                if (ids.length > best) localStorage.setItem('ecocraft_best_session', String(ids.length));
+            } catch(_){}
+        }
+        function loadDiscoveries() {
+            try {
+                const raw = localStorage.getItem('ecocraft_discovered'); if (!raw) return;
+                const ids = JSON.parse(raw); if (!Array.isArray(ids)) return;
+                ids.forEach(id => { if (ITEMS_DATA[id]) gameState.discoveredItems.add(id); });
+                updateDiscoveredPanel(); updateCounter();
+            } catch(_){}
+        }
+        function notifyDiscovery(itemId) {
+            try {
+                const ecoPoints = Number(localStorage.getItem('ecocraft_eco_points') || '0');
+                window.parent && window.parent.postMessage({
+                    type: 'ecocraft:discovery', itemId,
+                    totalDiscovered: gameState.discoveredItems.size, ecoPoints
+                }, '*');
+            } catch(_){}
+        }
+        document.getElementById('backBtn').addEventListener('click', () => {
+            sfxClick();
+            try { window.parent && window.parent.postMessage({ type: 'ecocraft:back-to-menu' }, '*'); } catch(_){}
+        });
+
+        // ============ START ============
+        document.getElementById('welcomeContinue').addEventListener('click', () => {
+            sfxClick();
+            document.getElementById('welcomeScreen').style.display = 'none';
+            // Unlock audio on user gesture (mobile + desktop autoplay policies)
+            try { winSfxEl.load(); } catch(_){}
+            try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(_){}
+            playTrack();
+            initGame();
+            loadDiscoveries();
+        });
+
+        // Fallback unlock: first interaction anywhere starts music if it was blocked
+        function unlockAudioOnce() {
+            try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch(_){}
+            if (musicEnabled && bgMusic.paused) {
+                if (!bgMusic.src) { playTrack(); } else { bgMusic.play().catch(()=>{}); }
+            }
+            window.removeEventListener('pointerdown', unlockAudioOnce);
+            window.removeEventListener('touchstart', unlockAudioOnce);
+            window.removeEventListener('keydown', unlockAudioOnce);
+        }
+        window.addEventListener('pointerdown', unlockAudioOnce, { once: false });
+        window.addEventListener('touchstart', unlockAudioOnce, { once: false });
+        window.addEventListener('keydown', unlockAudioOnce, { once: false });
+
+
+        // Pre-init counter only (game starts after Continue)
+        updateCounter();
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const cr = gameCanvas.getBoundingClientRect();
+                gameState.activeItems.forEach(it => {
+                    const el = it.element;
+                    let x = parseFloat(el.style.left), y = parseFloat(el.style.top);
+                    x = Math.max(0, Math.min(x, cr.width - el.offsetWidth));
+                    y = Math.max(0, Math.min(y, cr.height - el.offsetHeight));
+                    el.style.left = x + 'px'; el.style.top = y + 'px';
+                });
+            }, 150);
+        });
+
+        // ============ TUTORIAL COLLAPSIBLE ============
+        (function() {
+            const toggle = document.getElementById('tutorialToggle');
+            const body = document.getElementById('tutorialBody');
+            if (!toggle || !body) return;
+            toggle.addEventListener('click', () => {
+                sfxClick();
+                const open = body.classList.toggle('open');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) {
+                    setTimeout(() => body.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
