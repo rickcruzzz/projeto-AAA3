@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "EcoCraft – Jogo da Reciclagem",
   "short_name": "EcoCraft",
   "description": "Jogo educativo de combinações de reciclagem.",
@@ -15,13 +16,5 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "categories": ["games", "education"],
-  "screenshots": [
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ]
+  "categories": ["games", "education"]
 }
